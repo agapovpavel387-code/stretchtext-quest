@@ -14,11 +14,22 @@ chrome.storage.local.get(["sttpKey", "sttpModel"], (cfg) => {
   if (!cfg?.sttpKey) setStatus("No key yet — generate one at enter.pollinations.ai/keys.", false);
 });
 
+function clean(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^["'\s]+|["'\s]+$/g, "")
+    .replace(/\s+/g, "");
+}
+
 saveButton.addEventListener("click", () => {
-  const key = keyInput.value.trim();
-  const model = modelInput.value.trim() || "openai/gpt-5.4-nano";
-  if (!key) {
-    setStatus("Paste your sk_ key first.", false);
+  const key = clean(keyInput.value);
+  const model = clean(modelInput.value) || "openai/gpt-5.4-nano";
+  if (!key.startsWith("sk_")) {
+    setStatus("Ключ должен начинаться с sk_ (pk_ — публичный, не подходит).", false);
+    return;
+  }
+  if (key.length < 20) {
+    setStatus("Ключ подозрительно короткий — проверьте, что скопирован целиком.", false);
     return;
   }
   chrome.storage.local.set({ sttpKey: key, sttpModel: model }, () => {
