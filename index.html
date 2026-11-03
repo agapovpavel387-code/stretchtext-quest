@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StretchText Page — browser extension</title>
+  <style>
+    body { font: 17px/1.6 system-ui, sans-serif; max-width: 640px; margin: 48px auto; padding: 0 20px; color: #222; }
+    code { background: #f2f2f2; padding: 0 5px; border-radius: 4px; }
+    .btn { display: inline-block; padding: 10px 18px; border-radius: 8px; background: #ffd41f; color: #111; font-weight: 600; text-decoration: none; }
+    .btn:hover { background: #ffdc4d; }
+    .demo { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 14px 18px; }
+    footer { margin-top: 40px; color: #888; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>StretchText Page</h1>
+  <p>A browser extension that brings <a href="https://en.wikipedia.org/wiki/StretchText">stretchtext</a>
+  (Ted Nelson, 1967) to any web page:</p>
+  <p class="demo">“A monad is a type that wraps values.” <br/>
+  one click → <em>“In programming, a monad is a generic type that wraps values, and it lets you chain
+  steps that each take a plain value and return a wrapped value.”</em></p>
+  <ul>
+    <li>Select any phrase, click <b>⬡ Stretch</b> — the model writes more detail that grows in place.</li>
+    <li>Click the highlighted phrase to collapse it back.</li>
+    <li>Bring your own Pollen: generate a key at enter.pollinations.ai/keys and paste it in the options.</li>
+  </ul>
+  <a class="btn" href="https://github.com/agapovpavel387-code/stretchtext-quest">Get it on GitHub</a>
+  <footer>Made with <a href="https://pollinations.ai">pollinations.ai</a></footer>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { width: 260px; margin: 0; padding: 14px; font: 13px/1.5 system-ui, sans-serif; color: #222; }
+    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .ok { background: #2ea043; } .no { background: #d1242f; }
+    a { color: #0969da; }
+  </style>
+</head>
+<body>
+  <div class="row">
+    <b>StretchText Page</b><span><span id="dot" class="dot no"></span></span>
+  </div>
+  <div id="msg">Select a phrase on any page, then click “⬡ Stretch”.</div>
+  <div style="margin-top:10px"><a href="#" id="options">Open options (API key)</a></div>
+  <script src="popup.js"></script>
+</body>
+</html>

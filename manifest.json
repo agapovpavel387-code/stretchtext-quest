@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "StretchText Page",
+  "version": "0.1.0",
+  "description": "Stretchtext for any web page: select a phrase, a Pollinations model writes more detail that grows right where it stands, and shrinks back on click.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://gen.pollinations.ai/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "StretchText Page"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["core.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
