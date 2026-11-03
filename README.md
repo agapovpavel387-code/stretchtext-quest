@@ -7,7 +7,7 @@ Words you already read never move, so you never lose your place.
 
 Reading shrinks to the sentences that matter; the rest is one click away.
 
-[<img src="https://img.shields.io/badge/Made%20with-Pollinations.ai-blue" alt="Made with pollinations.ai">](https://pollinations.ai)
+[![Made with pollinations.ai](https://raw.githubusercontent.com/pollinations/pollinations/main/packages/ui/src/brand/badge-made-with.svg)](https://pollinations.ai/?ref=badge)
 
 ## How it works
 
