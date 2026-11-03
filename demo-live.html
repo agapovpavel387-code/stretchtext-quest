@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StretchText Page — live demo (calls the Pollinations API)</title>
+  <style>
+    body { font: 18px/1.75 Georgia, "Times New Roman", serif; max-width: 720px; margin: 48px auto; padding: 0 28px; color: #1c1c1c; }
+    h1 { font: 600 26px/1.3 system-ui, sans-serif; margin-bottom: 4px; }
+    .sub { font: 14px/1.5 system-ui, sans-serif; color: #777; margin-bottom: 26px; }
+    p { margin: 18px 0; }
+    .keybar { font: 13px/1.5 system-ui, sans-serif; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px 14px; margin-bottom: 26px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .keybar input { flex: 1; min-width: 240px; padding: 7px 10px; border: 1px solid #bbb; border-radius: 6px; font: 13px system-ui; }
+    .keybar button { padding: 7px 14px; border: 0; border-radius: 6px; background: #ffd41f; color: #111; font: 600 13px system-ui; cursor: pointer; }
+    .keybar button:hover { background: #ffdc4d; }
+    .sttp-btn { position: fixed; z-index: 1000; padding: 6px 10px; font: 600 13px/1.4 system-ui; color: #111; background: #ffd41f; border: 1px solid #b89500; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.25); cursor: pointer; }
+    .sttp-span { background: rgba(255, 220, 80, 0.35); border-radius: 2px; box-shadow: 0 0 0 1px rgba(255, 220, 80, 0.7); cursor: pointer; }
+    .sttp-open { background: rgba(120, 220, 170, 0.22); border-radius: 2px; }
+    .sttp-orig { background: rgba(255, 220, 80, 0.55); padding: 0 1px; border-radius: 2px; cursor: pointer; }
+    .msg { font: 13px/1.4 system-ui; min-height: 18px; }
+    .ok { color: #1a7f37; } .err { color: #b02a2a; }
+  </style>
+</head>
+<body>
+  <h1>StretchText Page — live demo</h1>
+  <div class="sub">This page calls gen.pollinations.ai with YOUR key; every expansion is billed to you (bring your own Pollen).</div>
+
+  <div class="keybar">
+    <span>sk_ key:</span>
+    <input id="key" type="password" autocomplete="off" placeholder="sk_..." />
+    <button id="save">Save</button>
+    <button id="autodemo">Auto-demo</button>
+  </div>
+  <div class="msg" id="msg"></div>
+
+  <p>A monad is a type that wraps values and lets you chain steps that each return a wrapped value.</p>
+  <p>Stretchtext, Ted Nelson's 1967 idea, never caught on because someone had to author every level by hand. Language models write every level for free.</p>
+  <p>The words you already read never move. New ones open up around them, on both sides, and click on the highlighted phrase collapses them back.</p>
+
+  <script src="core.js"></script>
+  <script>
+    (() => {
+      const keyInput = document.getElementById("key");
+      const msg = document.getElementById("msg");
+      const stored = localStorage.getItem("sttpKey") || "";
+      keyInput.value = stored;
+
+      function say(text, ok) {
+        msg.textContent = text;
+        msg.className = "msg " + (ok ? "ok" : "err");
+      }
+
+      document.getElementById("save").addEventListener("click", () => {
+        const key = keyInput.value.trim().replace(/^["'\s]+|["'\s]+$/g, "");
+        if (!key.startsWith("sk_")) { say("Key must start with sk_ (pk_ is publishable only).", false); return; }
+        localStorage.setItem("sttpKey", key);
+        say("Key saved locally. Select a phrase and click \u2B21 Stretch.", true);
+      });
+
+      let btn = null;
+      function hideBtn() { if (btn) { btn.remove(); btn = null; } }
+      function selText() {
+        const s = window.getSelection();
+        return s && !s.isCollapsed ? s.toString().replace(/\s+/g, " ").trim() : "";
+      }
+
+      function insideStretch(el) {
+        for (let n = el; n; n = n.parentElement) {
+          if (n.classList && (n.classList.contains("sttp-open") || n.classList.contains("sttp-span"))) return true;
+        }
+        return false;
+      }
+
+      function swap(phrase, expansion) {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+          const node = walker.currentNode;
+          if (!node.data || insideStretch(node.parentElement)) continue;
+          const idx = node.data.indexOf(phrase);
+          if (idx < 0) continue;
+          const parent = node.parentElement;
+          const span = document.createElement("span");
+          span.className = "sttp-span";
+          span.textContent = phrase;
+          span.addEventListener("click", () => { span.outerHTML = buildOpenHtml(expansion, 0); });
+          const rest = document.createTextNode(node.data.slice(idx + phrase.length));
+          node.data = node.data.slice(0, idx);
+          parent.insertBefore(span, node.nextSibling);
+          parent.insertBefore(rest, span.nextSibling);
+          if (parent.normalize) parent.normalize();
+          return true;
+        }
+        return false;
+      }
+
+      async function stretch(phrase) {
+        const key = keyInput.value.trim().replace(/^["'\s]+|["'\s]+$/g, "");
+        if (!key.startsWith("sk_")) { say("Paste an sk_ key and click Save first.", false); return; }
+        document.getSelection().removeAllRanges();
+        try {
+          const exps = await fetchExpansions(phrase, key);
+          if (!swap(phrase, exps[0])) say("Could not locate the phrase in the page text.", false);
+          else say("Expanded via " + exps[0].s.slice(0, 24) + "\u2026 (click the yellow mark to collapse)", true);
+        } catch (e) {
+          say("StretchText: " + e.message, false);
+        }
+      }
+
+      document.addEventListener("mouseup", (e) => {
+        const text = selText();
+        if (text && text.length <= 500 && !insideStretch(e.target)) {
+          const r = window.getSelection().getRangeAt(0).getBoundingClientRect();
+          hideBtn();
+          btn = document.createElement("button");
+          btn.className = "sttp-btn";
+          btn.textContent = "\u2B21 Stretch";
+          btn.style.left = (r.right + 8) + "px";
+          btn.style.top = (r.bottom + 8) + "px";
+          document.body.appendChild(btn);
+          btn.addEventListener("mousedown", (ev) => ev.preventDefault());
+          btn.addEventListener("click", () => { const t = text; hideBtn(); stretch(t); });
+        } else { setTimeout(hideBtn, 200); }
+      });
+
+      document.addEventListener("scroll", hideBtn, { passive: true });
+
+      document.addEventListener("click", (e) => {
+        const mark = e.target.closest && e.target.closest(".sttp-orig");
+        const open = mark && mark.closest(".sttp-open");
+        if (!open) return;
+        const span = document.createElement("span");
+        span.className = "sttp-span";
+        span.textContent = mark.textContent;
+        open.replaceWith(span);
+      });
+
+      document.getElementById("autodemo").addEventListener("click", async () => {
+        const phrase = "A monad is a type that wraps values and lets you chain steps that each return a wrapped value.";
+        const s = window.getSelection();
+        if (s) s.removeAllRanges();
+        await stretch(phrase);
+      });
+    })();
+  </script>
+</body>
+</html>
