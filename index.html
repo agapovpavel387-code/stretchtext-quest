@@ -10,6 +10,13 @@
     .btn { display: inline-block; padding: 10px 18px; border-radius: 8px; background: #ffd41f; color: #111; font-weight: 600; text-decoration: none; }
     .btn:hover { background: #ffdc4d; }
     .demo { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 14px 18px; }
+    h2 { font-size: 19px; margin: 34px 0 10px; }
+    .keybar { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+    .keybar input { flex: 1 1 240px; padding: 8px 10px; border: 1px solid #bbb; border-radius: 6px; font: 14px system-ui; }
+    .keybar button, #stretch { padding: 9px 16px; border: 0; border-radius: 8px; background: #ffd41f; color: #111; font: 600 14px system-ui; cursor: pointer; }
+    .msg { font: 13px/1.5 system-ui; min-height: 18px; margin: 6px 0; }
+    .ok { color: #1a7f37; } .err { color: #b02a2a; }
+    .sttp-orig { background: rgba(255, 220, 80, 0.5); border-radius: 2px; cursor: pointer; }
     footer { margin-top: 40px; color: #888; font-size: 14px; }
   </style>
 </head>
@@ -25,11 +32,64 @@
     <li>Click the highlighted phrase to collapse it back.</li>
     <li>Bring your own Pollen: generate a key at enter.pollinations.ai/keys and paste it in the options.</li>
   </ul>
+  <h2>Live demo</h2>
+  <p>This page calls <code>gen.pollinations.ai/v1/chat/completions</code> with your own key:
+  every expansion is billed to your Pollen, not to the author's.</p>
+  <div class="keybar">
+    <input id="key" type="password" autocomplete="off" placeholder="sk_...  (enter.pollinations.ai/keys)" />
+    <button id="save">Save key</button>
+    <button id="stretch">&#x2B21; Stretch this sentence</button>
+  </div>
+  <p id="msg" class="msg"></p>
+  <p class="demo" id="sentence">A monad is a type that wraps values.</p>
+
+  <h2>Install the extension</h2>
   <a class="btn" href="https://github.com/agapovpavel387-code/stretchtext-quest">Get it on GitHub</a>
   <footer>Made with
     <a href="https://pollinations.ai/?ref=badge">
       <img src="https://raw.githubusercontent.com/pollinations/pollinations/main/packages/ui/src/brand/badge-made-with.svg" alt="Made with pollinations.ai" style="height:22px; vertical-align:middle" />
     </a>
   </footer>
+  <script src="core.js"></script>
+  <script>
+    (() => {
+      const keyInput = document.getElementById('key');
+      const msg = document.getElementById('msg');
+      const sentence = document.getElementById('sentence');
+      keyInput.value = localStorage.getItem('sttpKey') || '';
+
+      function say(text, ok) {
+        msg.textContent = text;
+        msg.className = 'msg ' + (ok ? 'ok' : 'err');
+      }
+
+      document.getElementById('save').addEventListener('click', () => {
+        const key = keyInput.value.trim();
+        if (!key.startsWith('sk_')) { say('Paste an sk_ key from enter.pollinations.ai/keys - pk_ keys are publishable only.', false); return; }
+        localStorage.setItem('sttpKey', key);
+        say('Key saved in this browser only.', true);
+      });
+
+      document.getElementById('stretch').addEventListener('click', async () => {
+        const key = keyInput.value.trim();
+        if (!key.startsWith('sk_')) { say('Paste an sk_ key and click Save key first.', false); return; }
+        const button = document.getElementById('stretch');
+        button.disabled = true;
+        say('Calling the model...');
+        try {
+          const expansions = await fetchExpansions(sentence.textContent.trim(), key);
+          sentence.innerHTML = buildOpenHtml(expansions[0], 0);
+          say('Expanded via gen.pollinations.ai - click the yellow anchor to collapse.', true);
+          sentence.querySelector('.sttp-orig').addEventListener('click', () => {
+            sentence.textContent = expansions[0].s;
+          });
+        } catch (error) {
+          say(error.message, false);
+        } finally {
+          button.disabled = false;
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

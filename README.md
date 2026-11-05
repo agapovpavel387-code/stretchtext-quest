@@ -42,4 +42,12 @@ node --test test/
 Pure vanilla JS, no build step, no dependencies. The page logic lives in
 `core.js` (unit-tested on Node), DOM wiring in `content.js`.
 
+## Where the Pollinations call happens
+
+- `core.js` line 8 — `const GEN_URL = "https://gen.pollinations.ai/v1/chat/completions"`.
+- `core.js` line 29 — `fetchExpansions()` posts the reader's own `sk_` key in the `Authorization` header.
+- `content.js` line 56 — the extension calls `fetchExpansions(phrase, apiKey, model)` on the selected phrase.
+- `index.html` — the page at the App URL runs that call live: paste an `sk_` key, click **Stretch this sentence**.
+- `test/core.test.js` — 8 tests: request shape, missing key, 401 mapping, JSON parsing.
+
 Quest: [pollinations/pollinations#17998](https://github.com/pollinations/pollinations/issues/17998)
